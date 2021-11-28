@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  php:
+    container_name: APP
+    build: .
+    volumes:
+      - .:/usr/src/app
