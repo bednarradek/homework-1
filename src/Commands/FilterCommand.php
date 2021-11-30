@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Commands;
 
 use App\Services\FilterService;
-use Nette\Utils\FileSystem;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -36,15 +35,15 @@ class FilterCommand extends Command
             $pattern = $this->patternAsk($io);
 
             $path = strval($path);
-            $result = FilterService::filter(FileSystem::read($path), '/' . $pattern . '/');
+            $result = FilterService::filterFile($path, '/' . $pattern . '/');
             $this->printResult($result, $io);
         } else {
-            $content = "";
+            $result = [];
             $pattern = $this->patternAsk($io);
 
             while (($input = $io->ask("Write input", '')) !== '') {
-                $content .= $input . PHP_EOL;
-                $result = FilterService::filter($content, '/' . $pattern . '/');
+                $category = FilterService::matchCategory(strval($input), '/' . $pattern . '/');
+                isset($result[$category]) ? $result[$category]++ : $result[$category] = 1;
                 $this->printResult($result, $io);
             }
         }

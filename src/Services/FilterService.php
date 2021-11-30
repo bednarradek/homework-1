@@ -2,28 +2,46 @@
 
 namespace App\Services;
 
+use Generator;
 use Nette\Utils\Strings;
 
 class FilterService
 {
     /**
-     * @param string $content
+     * @param string $path
+     * @return Generator<int, string>
+     */
+    protected static function getFileLines(string $path): Generator
+    {
+        $file = fopen($path, 'r');
+        if ($file) {
+            while ($line = fgets($file)) {
+                yield $line;
+            }
+            fclose($file);
+        }
+    }
+
+    /**
+     * @param string $path
      * @param string $pattern
      * @return array<string, int>
      */
-    public static function filter(string $content, string $pattern): array
+    public static function filterFile(string $path, string $pattern): array
     {
         $result = [];
 
-        foreach (Strings::split($content, "/" . PHP_EOL . "/") as $line) {
-            $category = self::matchCategory($line, $pattern);
-            self::incrementCategory($category, $result);
+        foreach (self::getFileLines($path) as $line) {
+            if (is_string($line)) {
+                $category = self::matchCategory($line, $pattern);
+                self::incrementCategory($category, $result);
+            }
         }
         ksort($result);
         return $result;
     }
 
-    private static function matchCategory(string $line, string $pattern): ?string
+    public static function matchCategory(string $line, string $pattern): ?string
     {
         $category = Strings::match($line, $pattern)[1] ?? null;
         return $category ? Strings::upper($category) : null;
